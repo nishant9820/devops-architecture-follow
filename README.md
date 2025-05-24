@@ -77,7 +77,7 @@ After installing docker apply following command to use docker demon in jenkins
 sudo usermod -aG docker jenkins
 sudo systemctl restart jenkins
 ```
-To test if doocker demon is working in jenkins run follwoing command
+To test if docker demon is working in jenkins run follwoing command
 
 ```
 sudo su - jenkins
