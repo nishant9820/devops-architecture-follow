@@ -1,6 +1,6 @@
 Absolutely! Here's the **entire process combined into a single README.md** for easy copy-paste:
 
-````markdown
+
 # Jenkins Setup on Ubuntu 24.04 (t2.large) AWS Instance
 
 This guide shows how to launch an Ubuntu 24.04 instance on AWS, connect to it, update packages, install AWS CLI, install Jenkins, and access Jenkins on port 8080.
