@@ -310,6 +310,152 @@ Install the following plugins from Jenkins Plugin Manager:
 * Save
 
 
+#### 🧾 16. Create Pipeline Job
+
+1. Open Jenkins → Click on **New Item** → Select **Pipeline** → Name it `zomato-pipeline`.
+2. In the **Pipeline** configuration:
+
+   * Scroll to the **Pipeline Script** section.
+   * Paste the modified pipeline script below:
+
+     * Replace the following placeholders:
+
+       * `<image-name>` → e.g., `zomato-app`
+       * `<your-docker-name>` → Your **DockerHub username**, e.g., `nishant9820`
+       * `'your-email-id@gmail.com'` → Your **configured email ID in Jenkins**
+
+---
+
+### ✅ Example Modified Pipeline Script
+
+```groovy
+pipeline {
+    agent any
+    tools {
+        jdk 'jdk17'
+        nodejs 'node23'
+    }
+    environment {
+        SCANNER_HOME = tool 'sonar-scanner'
+    }
+    stages {
+        stage ("Clean Workspace") {
+            steps {
+                cleanWs()
+            }
+        }
+        stage ("Git Checkout") {
+            steps {
+                git '<your-github-URL>'
+            }
+        }
+        stage("Sonarqube Analysis"){
+            steps {
+                withSonarQubeEnv('sonar-server') {
+                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=<Your-project-name> \
+                    -Dsonar.projectKey=<Your-project-name> '''
+                }
+            }
+        }
+        stage("Code Quality Gate"){
+            steps {
+                script {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token' 
+                }
+            } 
+        }
+        stage("Install NPM Dependencies") {
+            steps {
+                sh "npm install"
+            }
+        }
+        stage('OWASP FS SCAN') {
+            steps {
+                dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit -n', odcInstallation: 'DP-Check'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
+        stage ("Trivy File Scan") {
+            steps {
+                sh "trivy fs . > trivy.txt"
+            }
+        }
+        stage ("Build Docker Image") {
+            steps {
+                sh "docker build -t zomato-app ."
+            }
+        }
+        stage ("Tag & Push to DockerHub") {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'docker') {
+                        sh "docker tag <image-name> <your-docker-name>/<image-name>:latest"
+                        sh "docker push <your-docker-name>/<image-name>:latest"
+                    }
+                }
+            }
+        }
+        stage('Docker Scout Image') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
+                        sh 'docker-scout quickview <your-docker-name>/<image-name>:latest'
+                        sh 'docker-scout cves <your-docker-name>/<image-name>:latest'
+                        sh 'docker-scout recommendations <your-docker-name>/<image-name>:latest'
+                    }
+                }
+            }
+        }
+        stage ("Deploy to Container") {
+            steps {
+                sh 'docker run -d --name <image-name> -p 3000:3000 <your-docker-name>/<image-name>:latest'
+            }
+        }
+    }
+    post {
+        always {
+            emailext attachLog: true,
+                subject: "'${currentBuild.result}'",
+                body: """
+                    <html>
+                    <body>
+                        <div style="background-color: #FFA07A; padding: 10px; margin-bottom: 10px;">
+                            <p style="color: white; font-weight: bold;">Project: ${env.JOB_NAME}</p>
+                        </div>
+                        <div style="background-color: #90EE90; padding: 10px; margin-bottom: 10px;">
+                            <p style="color: white; font-weight: bold;">Build Number: ${env.BUILD_NUMBER}</p>
+                        </div>
+                        <div style="background-color: #87CEEB; padding: 10px; margin-bottom: 10px;">
+                            <p style="color: white; font-weight: bold;">URL: ${env.BUILD_URL}</p>
+                        </div>
+                    </body>
+                    </html>
+                """,
+                to: 'your-email-id@gmail.com',
+                mimeType: 'text/html',
+                attachmentsPattern: 'trivy.txt'
+        }
+    }
+}
+```
+
+---
+
+📝 **Notes**:
+
+* Ensure Jenkins is configured with:
+
+  * Docker installed and running.
+  * SonarQube configured with the `sonar-server` name.
+  * Email notifications properly set up via `Manage Jenkins → Configure System → Extended E-mail Notification`.
+* Credentials required in Jenkins:
+
+  * DockerHub credentials ID as `docker`.
+  * SonarQube token as `Sonar-token`.
+
+---
+
+
 
 
 
