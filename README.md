@@ -1,8 +1,3 @@
-# Jenkins Setup on AWS EC2 Ubuntu 24.04 Instance
-
-This guide walks through the steps to set up Jenkins on an AWS EC2 Ubuntu 24.04 instance.
-
----
 
 ## 📌 1. Launch an EC2 Instance
 
@@ -19,3 +14,8 @@ Use the following command:
 
 ```bash
 ssh -i "your-key.pem" ubuntu@<your-ec2-public-ip>
+
+🔄 3. Update Packages
+sudo su
+sudo apt update -y
+
