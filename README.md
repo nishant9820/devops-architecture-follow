@@ -1071,8 +1071,6 @@ aws configure
 * [eksctl GitHub](https://github.com/weaveworks/eksctl)
 * [EKS Documentation](https://docs.aws.amazon.com/eks/latest/userguide/what-is-eks.html)
 
-```
-
 ---
 
 
