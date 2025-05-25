@@ -360,14 +360,20 @@ pipeline {
                 git '<your-github-URL>'
             }
         }
-        stage("Sonarqube Analysis"){
-            steps {
-                withSonarQubeEnv('sonar-server') {
-                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=<Your-project-name> \
-                    -Dsonar.projectKey=<Your-project-name> '''
-                }
-            }
-        }
+       stage("Sonarqube Analysis") {
+    steps {
+        withSonarQubeEnv('sonar-server') {
+            sh '''
+                $SCANNER_HOME/bin/sonar-scanner \
+                -Dsonar.projectName=zomato \
+                -Dsonar.projectKey=zomato \
+                -Dsonar.sources=src \
+                -Dsonar.inclusions=**/*.js,**/*.jsx \
+                -Dsonar.exclusions=src/components/CTA/CTA.jsx,**/*.test.js,**/__tests__/**,**/node_modules/** \
+             '''
+           }
+         }
+       }
         stage("Code Quality Gate"){
             steps {
                 script {
@@ -375,11 +381,18 @@ pipeline {
                 }
             } 
         }
-        stage("Install NPM Dependencies") {
-            steps {
-                sh "npm install"
-            }
+         stage("Clean & Install Dependencies") {
+        environment {
+            JAVA_OPTS = '-Dorg.jenkinsci.plugins.durabletask.BourneShellScript.HEARTBEAT_CHECK_INTERVAL=86400'
         }
+        steps {
+        sh "npm cache clean --force"
+        sh "rm -rf node_modules package-lock.json"
+        timeout(time: 10, unit: 'MINUTES') {
+            sh "npm install --legacy-peer-deps --no-audit --no-optional --no-progress"
+           }
+         }
+       }
         stage('OWASP FS SCAN') {
             steps {
                 dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit -n', odcInstallation: 'DP-Check'
