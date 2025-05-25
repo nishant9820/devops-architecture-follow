@@ -944,100 +944,169 @@ Monitor all your infrastructure and pipeline metrics from one place!
 
 ---
 
+### 🚀 20. Deploy Application on AWS EKS Cluster using eksctl
 
-Here is a structured and clean **`README.md`** file for the EKS cluster creation and deployment steps:
+This README will guide you through the process of deploying a Kubernetes (K8s) cluster using **Amazon EKS**, via `eksctl` on **VS Code / PowerShell**.
 
----
-
-
-### 🚀 20. Deploy Application to AWS EKS Cluster
-
-This guide provides step-by-step instructions for creating an EKS cluster using `eksctl`, setting up necessary IAM roles, creating a managed node group, and deploying your application using `kubectl`.
-
----
-
-## 🧰 Prerequisites
-
-Before getting started, ensure you have the following tools installed and configured:
-
-- AWS CLI
-- `eksctl`
-- `kubectl`
-- IAM permissions for EKS and related services
-
-> ⚠️ **Important Notes**  
-> - Run your terminal (VS Code / PowerShell / Command Prompt) as **Administrator** to avoid permission issues.  
-> - You might encounter errors if `eksctl`, `kubectl`, or AWS CLI aren't properly configured.
+> ⚠️ **Notes before starting:**
+> - Make sure you have the following tools installed: `eksctl`, `kubectl`, `awscli`
+> - Run your terminal as **Administrator** (VS Code / PowerShell / CMD)
+> - PowerShell does not support `\` as line continuation like Unix shells, so we will use **one-liners** or **backticks (`)**
 
 ---
 
-## Step 01: Create EKS Cluster
+## 🔧 Step 01: Create EKS Cluster (without Node Group)
 
-Create a new cluster named `kastrocluster` without node groups.
-
+### ✅ One-liner (Recommended in Windows/PowerShell)
 ```bash
 eksctl create cluster --name=kastrocluster --region=ap-northeast-1 --zones=ap-northeast-1a,ap-northeast-1c --without-nodegroup
 ````
 
-> 🕐 Takes around **20-25 minutes**.
-> ✅ After successful creation, verify on the AWS Console under **CloudFormation** → Stack named `kastrocluster`.
+### ✅ Multi-line using Unix-style backslashes (`\`) – works in Linux/Mac
+
+```bash
+eksctl create cluster --name=kastrocluster \
+                      --region=ap-northeast-1 \
+                      --zones=ap-northeast-1a,ap-northeast-1c \
+                      --without-nodegroup
+```
+
+### ✅ PowerShell-style (use backtick \` for line continuation)
+
+```powershell
+eksctl create cluster --name=kastrocluster `
+                      --region=ap-northeast-1 `
+                      --zones=ap-northeast-1a,ap-northeast-1c `
+                      --without-nodegroup
+```
+
+> ⏳ This step takes \~20–25 mins. Watch CloudFormation stacks in the AWS Console.
 
 ---
 
-## Step 02: Associate IAM OIDC Provider
+## ✅ Verify Cluster
 
-Associate an IAM OIDC identity provider to allow Kubernetes to assume IAM roles:
+```bash
+eksctl get cluster
+```
+
+Also check in AWS Console → **EKS Service** → `kastrocluster`
+
+---
+
+## 🔒 Step 02: Associate IAM OIDC Provider
+
+IAM OIDC enables us to associate IAM roles with Kubernetes service accounts.
+
+### ✅ One-liner
 
 ```bash
 eksctl utils associate-iam-oidc-provider --region ap-northeast-1 --cluster kastrocluster --approve
 ```
 
-> This step is necessary for enabling IAM roles for Kubernetes service accounts.
+### ✅ Multi-line (Unix/macOS)
+
+```bash
+eksctl utils associate-iam-oidc-provider \
+    --region ap-northeast-1 \
+    --cluster kastrocluster \
+    --approve
+```
+
+### ✅ PowerShell
+
+```powershell
+eksctl utils associate-iam-oidc-provider `
+    --region ap-northeast-1 `
+    --cluster kastrocluster `
+    --approve
+```
 
 ---
 
-## Step 03: Create Public Node Group with Add-ons
+## 🧱 Step 03: Create Node Group (Public Subnets)
 
-This step provisions worker nodes for the EKS cluster.
+### ✅ One-liner
 
 ```bash
 eksctl create nodegroup --cluster=kastrocluster --region=ap-northeast-1 --name=kastrodemo-ng-public1 --node-type=t3.medium --nodes=2 --nodes-min=2 --nodes-max=4 --node-volume-size=20 --ssh-access --ssh-public-key=Prajwal --managed --asg-access --external-dns-access --full-ecr-access --appmesh-access --alb-ingress-access
 ```
 
-> This will also create the required IAM policies for services like App Mesh, ALB Ingress, etc.
+### ✅ Multi-line (Unix/macOS)
+
+```bash
+eksctl create nodegroup --cluster=kastrocluster \
+    --region=ap-northeast-1 \
+    --name=kastrodemo-ng-public1 \
+    --node-type=t3.medium \
+    --nodes=2 \
+    --nodes-min=2 \
+    --nodes-max=4 \
+    --node-volume-size=20 \
+    --ssh-access \
+    --ssh-public-key=Prajwal \
+    --managed \
+    --asg-access \
+    --external-dns-access \
+    --full-ecr-access \
+    --appmesh-access \
+    --alb-ingress-access
+```
+
+### ✅ PowerShell
+
+```powershell
+eksctl create nodegroup --cluster=kastrocluster `
+    --region=ap-northeast-1 `
+    --name=kastrodemo-ng-public1 `
+    --node-type=t3.medium `
+    --nodes=2 `
+    --nodes-min=2 `
+    --nodes-max=4 `
+    --node-volume-size=20 `
+    --ssh-access `
+    --ssh-public-key=Prajwal `
+    --managed `
+    --asg-access `
+    --external-dns-access `
+    --full-ecr-access `
+    --appmesh-access `
+    --alb-ingress-access
+```
+
+### 🧾 Flag Explanations:
+
+* `--ssh-access`: Enables SSH access to nodes
+* `--ssh-public-key=Prajwal`: SSH key name in AWS Console
+* `--managed`: Creates a managed node group
+* `--asg-access`: Grants access to Auto Scaling Groups
+* `--external-dns-access`: Allows use of external-dns with Route 53
+* `--full-ecr-access`: Allows pulling images from Amazon ECR
+* `--appmesh-access`: Grants access for AWS App Mesh
+* `--alb-ingress-access`: Grants IAM permissions for AWS ALB Ingress Controller
 
 ---
 
-## Step 04: Verify Cluster & Node Group
-
-After the node group is created:
-
-* Go to **EKS Console → Clusters → kastrocluster → Compute Tab**
-* Ensure that the node group appears.
-* Or verify via terminal:
+## ✅ Step 04: Verify Cluster & Node Group
 
 ```bash
 kubectl get nodes
 ```
 
-> You should see **2 nodes** listed.
+In AWS Console → EKS → Cluster → **Compute Tab** → Node Group should be visible.
 
 ---
 
-## Step 05: (Optional) Delete Node Group
+## 🧹 Optional Cleanup
 
-To delete a specific node group:
+### Step 05: Delete Node Group
 
 ```bash
 eksctl get nodegroup --cluster=kastrocluster
 eksctl delete nodegroup --cluster=kastrocluster --name=kastrodemo-ng-public1
 ```
 
----
-
-## Step 06: (Optional) Delete EKS Cluster
-
-To delete the entire EKS cluster:
+### Step 06: Delete Cluster
 
 ```bash
 eksctl delete cluster kastrocluster
@@ -1045,34 +1114,24 @@ eksctl delete cluster kastrocluster
 
 ---
 
-## ✅ Deployment Note
-
-Once the cluster and node group are created and verified, you can now deploy your application using:
+## 🚀 Final: Deploy Your Application on EKS
 
 ```bash
-kubectl apply -f <your-k8s-manifest>.yaml
+kubectl apply -f your-app-deployment.yaml
 ```
+
+Replace `your-app-deployment.yaml` with your actual deployment file.
 
 ---
 
-## 📌 Troubleshooting Tips
-
-* **PowerShell Users**: If backslash (`\`) based line continuation gives errors, use the PowerShell backtick (`` ` ``) instead.
-* Ensure your AWS credentials are configured via:
-
-```bash
-aws configure
-```
-
----
-
-## 🔍 References
+## 🔗 References
 
 * [eksctl GitHub](https://github.com/weaveworks/eksctl)
-* [EKS Documentation](https://docs.aws.amazon.com/eks/latest/userguide/what-is-eks.html)
+* [EKS Documentation](https://docs.aws.amazon.com/eks/latest/userguide/getting-started.html)
 
 ---
 
+> 📌 Make sure to keep your terminal open and don’t interrupt the process. Most issues arise due to permissions or closed terminals during provisioning.
 
-
+```
 
