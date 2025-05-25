@@ -1135,7 +1135,7 @@ Replace `your-app-deployment.yaml` with your actual deployment file.
 
 
 
-# 🚀 20. Kubernetes Monitoring with Prometheus and Argo CD
+### 🚀 20. Kubernetes Monitoring with Prometheus and Argo CD
 
 This guide walks you through the process of:
 
