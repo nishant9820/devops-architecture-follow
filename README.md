@@ -622,7 +622,7 @@ http://<your-server-ip>:9090
 
 > 🧠 Tip: Keep your security group open for port `9090` (Prometheus), `3000` (Grafana), and `9100` (Node Exporter) only from trusted IPs.
 
-```
+
 
 
 
