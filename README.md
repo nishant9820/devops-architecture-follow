@@ -1135,3 +1135,233 @@ Replace `your-app-deployment.yaml` with your actual deployment file.
 
 
 
+# 🚀 20. Kubernetes Monitoring with Prometheus and Argo CD
+
+This guide walks you through the process of:
+
+* Installing **Argo CD** on Kubernetes
+* Exposing Argo CD with a **LoadBalancer**
+* Installing **Prometheus Node Exporter** using Helm
+* Monitoring your Kubernetes cluster
+* Adding custom scrape config for Node Exporter
+* Deploying and monitoring apps via Argo CD
+
+---
+
+## 📌 Prerequisites
+
+* Kubernetes cluster running on EKS or local setup
+* `kubectl`, `helm`, and `jq` installed
+* VS Code / Terminal / PowerShell
+* AWS EC2 permissions if using EKS
+* Internet access from your terminal
+
+---
+
+## 1️⃣ Install Argo CD
+
+```bash
+kubectl create namespace argocd
+
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v2.4.7/manifests/install.yaml
+```
+
+Wait for the pods to come up:
+
+```bash
+kubectl get pods -n argocd
+```
+
+---
+
+## 2️⃣ Expose Argo CD Publicly
+
+```bash
+kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+```
+
+Wait \~5 minutes for LoadBalancer to be provisioned.
+
+Check LoadBalancer URL:
+
+```bash
+kubectl get svc argocd-server -n argocd
+```
+
+---
+
+## 3️⃣ Get Argo CD Server URL
+
+### On VS Code (Linux/macOS):
+
+```bash
+export ARGOCD_SERVER=`kubectl get svc argocd-server -n argocd -o json | jq --raw-output '.status.loadBalancer.ingress[0].hostname'`
+echo $ARGOCD_SERVER
+```
+
+### On PowerShell:
+
+```powershell
+$env:ARGOCD_SERVER = $(kubectl get svc argocd-server -n argocd -o json | jq --raw-output '.status.loadBalancer.ingress[0].hostname')
+echo $env:ARGOCD_SERVER
+```
+
+---
+
+## 4️⃣ Get Argo CD Admin Password
+
+### On VS Code (Linux/macOS):
+
+```bash
+export ARGO_PWD=`kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d`
+echo $ARGO_PWD
+```
+
+### On PowerShell:
+
+```powershell
+$env:ARGO_PWD = (kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | % { [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($_)) })
+echo $env:ARGO_PWD
+```
+
+---
+
+## 5️⃣ Log into Argo CD UI
+
+* Go to: `http://<ARGOCD_SERVER_URL>`
+* Username: `admin`
+* Password: (from the step above)
+
+---
+
+## 🔧 Inside Argo CD (UI Steps)
+
+Once logged in:
+
+1. **Create a New Application**:
+
+   * Click **New App**
+   * Provide:
+
+     * **App Name**: `monitoring-app` (or any)
+     * **Project**: `default`
+     * **Sync Policy**: Manual/Auto
+     * **Repository URL**: GitHub repo with your Kubernetes manifests
+     * **Path**: Path inside the repo to the Kubernetes YAMLs (e.g., `kubernetes/`)
+     * **Cluster**: Leave as default ([https://kubernetes.default.svc](https://kubernetes.default.svc))
+     * **Namespace**: Where your app will be deployed
+
+2. **Click Create**
+
+3. **Sync the App**:
+
+   * Click **Sync** to deploy resources to the cluster.
+
+4. **Monitor the App**:
+
+   * Argo CD will show the live status and health of the app.
+
+---
+
+## 6️⃣ Install Prometheus Node Exporter via Helm
+
+```bash
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+
+kubectl create namespace prometheus-node-exporter
+
+helm install prometheus-node-exporter prometheus-community/prometheus-node-exporter --namespace prometheus-node-exporter
+```
+
+---
+
+## 7️⃣ Configure Prometheus Scrape Job
+
+1. SSH into **monitoring server VM** where Prometheus is installed.
+
+2. Edit the config file:
+
+```bash
+sudo vi /etc/prometheus/prometheus.yml
+```
+
+3. Add this block at the bottom:
+
+```yaml
+  - job_name: 'k8s'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['<nodeIP>:9100']
+```
+
+> Replace `<nodeIP>` with the **public IP** of one of the EKS worker nodes (from AWS Console > EKS > Cluster > Compute tab > Nodes > EC2).
+
+4. Save and exit (`ESC` → `:wq`)
+
+5. Validate config:
+
+```bash
+promtool check config /etc/prometheus/prometheus.yml
+```
+
+6. Reload Prometheus:
+
+```bash
+curl -X POST http://localhost:9090/-/reload
+```
+
+---
+
+## 8️⃣ Access Your Application
+
+* Copy node’s public IP from EKS
+* Open port `30001` in security group of EC2 (worker node)
+* Visit: `http://<nodeIP>:30001`
+
+---
+
+## ⚠️ Troubleshooting
+
+* If Prometheus job `k8s` is showing an error, ensure:
+
+  * Port `9100` is open on all EKS worker nodes
+  * Node Exporter is running properly in the `prometheus-node-exporter` namespace
+
+---
+
+## 🧹 Clean Up
+
+* Delete Argo CD resources:
+
+  ```bash
+  kubectl delete ns argocd
+  ```
+
+* Delete Node Exporter:
+
+  ```bash
+  helm uninstall prometheus-node-exporter -n prometheus-node-exporter
+  kubectl delete ns prometheus-node-exporter
+  ```
+
+* Terminate EC2 nodes / EKS cluster
+
+* Delete CloudFormation stacks if applicable
+
+---
+
+## 🙏 Kindly Share
+
+If this setup worked well for you, please:
+
+* Share your experience on **LinkedIn**
+* Tag the trainer
+* Add the **YouTube video link** of this tutorial
+
+Help others find it easily! 🌍
+
+---
+
+Let me know if you'd like this as a downloadable file or if you want me to add a GitHub Action for automated deployment too.
+
+
