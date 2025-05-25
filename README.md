@@ -824,6 +824,127 @@ Click on **"show more"** next to the **jenkins** job and open the URL provided t
 ---
 
 
+Here's a neatly formatted **README** section that walks through **Grafana Installation**, **Prometheus Integration**, and **Dashboard Setup for Node Exporter and Jenkins Monitoring**.
+
+---
+
+### 🖥️ 19. Grafana Monitoring Setup with Prometheus, Node Exporter & Jenkins
+
+This guide walks you through installing Grafana OSS, integrating it with Prometheus, and setting up dashboards to monitor Node Exporter and Jenkins metrics.
+
+---
+
+## 📦 Step 1: Install Prerequisite Packages
+
+```bash
+sudo apt-get install -y apt-transport-https software-properties-common wget
+```
+
+---
+
+## 🔑 Step 2: Import GPG Key for Grafana
+
+```bash
+sudo mkdir -p /etc/apt/keyrings/
+wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
+```
+
+---
+
+## 📦 Step 3: Add Grafana Repository
+
+### For Stable Releases:
+
+```bash
+echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
+```
+
+### For Beta Releases (optional):
+
+```bash
+echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com beta main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
+```
+
+---
+
+## 🔄 Step 4: Update Package List
+
+```bash
+sudo apt-get update
+```
+
+---
+
+## 🛠️ Step 5: Install Grafana OSS
+
+```bash
+sudo apt-get install grafana
+```
+
+---
+
+## 🌐 Step 6: Access Grafana Web Interface
+
+* Open Grafana in your browser:
+  `http://<monitoring-server-ip>:3000`
+* Default credentials:
+
+  * **Username**: `admin`
+  * **Password**: `admin`
+* You can change the password or click **"Skip"** to continue.
+
+---
+
+## ⚙️ Step 7: Add Prometheus as a Data Source
+
+1. In the Grafana UI, go to **Connections** → **Data Sources**.
+2. Select **Prometheus**.
+3. Enable the **Default** toggle.
+4. In **HTTP → URL**, enter your Prometheus server URL (e.g., `http://localhost:9090`) **without the trailing slash**.
+5. Scroll down and click **Save & Test**.
+6. You should see a green checkmark if everything is configured correctly.
+
+---
+
+## 📊 Step 8: Import Node Exporter Dashboard
+
+1. Open this URL in a browser:
+   [https://grafana.com/grafana/dashboards/1860-node-exporter-full/](https://grafana.com/grafana/dashboards/1860-node-exporter-full/)
+2. Click **Copy ID to clipboard**.
+3. In Grafana, click **+ (plus icon)** in the top-right corner → **Import Dashboard**.
+4. Paste **`1860`** and click **Load**.
+5. Under **Prometheus**, select your data source.
+6. Click **Import** to load the dashboard.
+7. Optionally, click **Save** (top-right corner).
+
+---
+
+## 📊 Step 9: Import Jenkins Dashboard
+
+1. Open this URL in a browser:
+   [https://grafana.com/grafana/dashboards/9964-jenkins-performance-and-health-overview/](https://grafana.com/grafana/dashboards/9964-jenkins-performance-and-health-overview/)
+2. Click **Copy ID to clipboard**.
+3. In Grafana, click **+ (plus icon)** in the top-right corner → **Import Dashboard**.
+4. Paste **`9964`** and click **Load**.
+5. Under **Prometheus**, select your data source.
+6. Click **Import** to load the dashboard.
+7. Optionally, click **Save** (top-right corner).
+
+---
+
+## ✅ Result
+
+You now have Grafana set up with:
+
+* Node Exporter Dashboard
+* Jenkins CI/CD Performance Dashboard
+* Prometheus as the data source
+
+Monitor all your infrastructure and pipeline metrics from one place!
+
+---
+
+Let me know if you want this exported in `.md` file format or want the dashboards auto-loaded using provisioning!
 
 
 
