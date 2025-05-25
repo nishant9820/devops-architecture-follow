@@ -950,7 +950,7 @@ Here is a structured and clean **`README.md`** file for the EKS cluster creation
 ---
 
 
-# 🚀 20. Deploy Application to AWS EKS Cluster
+### 🚀 20. Deploy Application to AWS EKS Cluster
 
 This guide provides step-by-step instructions for creating an EKS cluster using `eksctl`, setting up necessary IAM roles, creating a managed node group, and deploying your application using `kubectl`.
 
