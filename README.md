@@ -479,6 +479,152 @@ pipeline {
 
 ---
 
+# 📊 17. Monitoring Setup with Prometheus on Ubuntu 24.04
+
+This guide helps you set up a **Monitoring Server** using **Prometheus**, **Grafana**, and **Node Exporter** on an AWS EC2 instance (Ubuntu 24.04).
+
+---
+
+## 🚀 Step 1: Launch EC2 VM for Monitoring
+
+- **Name**: `Monitoring Server`
+- **OS**: Ubuntu 24.04
+- **Instance Type**: `t2.large`
+- **Security Group**: Use the one created in Step 1 of your project
+- **Storage**: 30GB EBS
+
+---
+
+## 🔌 Step 2: Connect to Your Monitoring Server
+
+```bash
+ssh -i <your-key.pem> ubuntu@<your-server-ip>
+````
+
+---
+
+## 🛠️ Step 3: Install Prometheus
+
+### 3.1 Create Prometheus User
+
+```bash
+sudo useradd --system --no-create-home --shell /bin/false prometheus
+```
+
+### 3.2 Download and Extract Prometheus
+
+```bash
+wget https://github.com/prometheus/prometheus/releases/download/v2.47.1/prometheus-2.47.1.linux-amd64.tar.gz
+tar -xvf prometheus-2.47.1.linux-amd64.tar.gz
+cd prometheus-2.47.1.linux-amd64/
+```
+
+### 3.3 Move Binaries and Config Files
+
+```bash
+sudo mkdir -p /data /etc/prometheus
+sudo mv prometheus promtool /usr/local/bin/
+sudo mv consoles/ console_libraries/ /etc/prometheus/
+sudo mv prometheus.yml /etc/prometheus/prometheus.yml
+```
+
+### 3.4 Set Ownership
+
+```bash
+sudo chown -R prometheus:prometheus /etc/prometheus/ /data/
+```
+
+---
+
+## ⚙️ Step 4: Create Prometheus Systemd Service
+
+```bash
+sudo vi /etc/systemd/system/prometheus.service
+```
+
+### Paste the following into the file:
+
+```ini
+[Unit]
+Description=Prometheus
+Wants=network-online.target
+After=network-online.target
+
+StartLimitIntervalSec=500
+StartLimitBurst=5
+
+[Service]
+User=prometheus
+Group=prometheus
+Type=simple
+Restart=on-failure
+RestartSec=5s
+ExecStart=/usr/local/bin/prometheus \
+  --config.file=/etc/prometheus/prometheus.yml \
+  --storage.tsdb.path=/data \
+  --web.console.templates=/etc/prometheus/consoles \
+  --web.console.libraries=/etc/prometheus/console_libraries \
+  --web.listen-address=0.0.0.0:9090 \
+  --web.enable-lifecycle
+
+[Install]
+WantedBy=multi-user.target
+```
+
+#### 🔍 Explanation:
+
+* `User` and `Group`: Run Prometheus as the `prometheus` user.
+* `ExecStart`: Defines how Prometheus starts, including config and data paths.
+* `--web.listen-address`: Listens on all interfaces at port `9090`.
+* `--web.enable-lifecycle`: Allows API-based config reloads.
+
+---
+
+## ▶️ Step 5: Start Prometheus
+
+```bash
+sudo systemctl enable prometheus
+sudo systemctl start prometheus
+sudo systemctl status prometheus
+```
+
+---
+
+## 🌐 Step 6: Access Prometheus Dashboard
+
+Open your browser and go to:
+
+```
+http://<your-server-ip>:9090
+```
+
+> 🔧 If `https://` doesn't work, remove the `s` and use `http://`.
+
+---
+
+## ✅ Step 7: Verify Targets
+
+* In the Prometheus UI:
+
+  * Click on **Status** → **Targets**
+  * You should see: `Prometheus (1/1 up)`
+
+---
+
+## 📌 Next Steps
+
+* Install **Node Exporter**
+* Install **Grafana**
+* Configure Prometheus to scrape Node Exporter
+* Add Prometheus as a data source in Grafana
+
+---
+
+> 🧠 Tip: Keep your security group open for port `9090` (Prometheus), `3000` (Grafana), and `9100` (Node Exporter) only from trusted IPs.
+
+```
+
+
 
 
 
