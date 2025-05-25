@@ -1133,5 +1133,5 @@ Replace `your-app-deployment.yaml` with your actual deployment file.
 
 > 📌 Make sure to keep your terminal open and don’t interrupt the process. Most issues arise due to permissions or closed terminals during provisioning.
 
-```
+
 
