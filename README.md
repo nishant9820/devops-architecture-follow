@@ -721,6 +721,117 @@ http://<your-server-ip>:9100/metrics
 
 ---
 
+Sure! Here’s a nicely formatted **README** section for the **Prometheus Plugin Integration** part you provided. You can add this to your project’s README.md file:
+
+---
+
+### 9: Configure Prometheus Plugin Integration
+
+This section describes how to configure Prometheus to scrape metrics from **Node Exporter** and **Jenkins** in order to monitor the CI/CD pipeline and system metrics.
+
+---
+
+## Prerequisites
+
+* Prometheus installed and running
+* Node Exporter installed on the monitoring VM
+* Jenkins with Prometheus plugin enabled for exposing metrics
+
+---
+
+## Steps to Configure Prometheus
+
+### 1. Edit Prometheus Configuration
+
+Open the Prometheus configuration file:
+
+```bash
+cd /etc/prometheus/
+sudo vi prometheus.yml
+```
+
+Locate the default job called `prometheus`. At the end of the file, add the following job configurations:
+
+```yaml
+- job_name: 'node_exporter'
+  static_configs:
+    - targets: ['<MonitoringVMip>:9100']
+
+- job_name: 'jenkins'
+  metrics_path: '/prometheus'
+  static_configs:
+    - targets: ['<your-jenkins-ip>:<your-jenkins-port>']
+```
+
+> Replace `<MonitoringVMip>`, `<your-jenkins-ip>`, and `<your-jenkins-port>` with the appropriate IP addresses and ports for your setup.
+
+Save and exit the editor (`esc` then `:wq`).
+
+---
+
+### 2. Validate Prometheus Configuration
+
+Run the following command to check the configuration validity:
+
+```bash
+promtool check config /etc/prometheus/prometheus.yml
+```
+
+If successful, you should see:
+
+```
+SUCCESS: /etc/prometheus/prometheus.yml is valid
+```
+
+---
+
+### 3. Reload Prometheus Configuration
+
+Reload the Prometheus configuration without restarting the service by running:
+
+```bash
+curl -X POST http://localhost:9090/-/reload
+```
+
+---
+
+### 4. Open Firewall Ports (if needed)
+
+Make sure port `9100` is open on your monitoring VM to allow Prometheus to scrape Node Exporter metrics.
+
+---
+
+### 5. Verify Targets in Prometheus UI
+
+Access the Prometheus targets page in your browser:
+
+```
+http://<your-prometheus-ip>:9090/targets
+```
+
+You should see the following targets with status **UP**:
+
+* `prometheus (1/1 up)`
+* `node_exporter (1/1 up)`
+* `jenkins (1/1 up)`
+
+---
+
+### 6. View Scraped Metrics
+
+Click on **"show more"** next to the **jenkins** job and open the URL provided to see the metrics being scraped from Jenkins.
+
+---
+
+## Summary
+
+You have successfully integrated **Node Exporter** and **Jenkins** monitoring into Prometheus. This setup enables real-time visibility into system and Jenkins CI/CD pipeline metrics.
+
+---
+
+If you want, I can also help you format it for Markdown with badges or images. Just let me know!
+
+
 
 
 
