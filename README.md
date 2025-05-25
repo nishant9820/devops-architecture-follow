@@ -622,6 +622,104 @@ http://<your-server-ip>:9090
 
 > 🧠 Tip: Keep your security group open for port `9090` (Prometheus), `3000` (Grafana), and `9100` (Node Exporter) only from trusted IPs.
 
+---
+
+Here's a concise `README.md` with only the **working steps** for configuring **Node Exporter** on your Linux (Ubuntu) server:
+
+---
+
+## 📘 18. Node Exporter Setup on Ubuntu (Systemd)
+
+
+### ✅ Step-by-Step Instructions
+
+#### 1. **Create a dedicated user**
+
+```bash
+sudo useradd --no-create-home --shell /usr/sbin/nologin node_exporter
+```
+
+---
+
+#### 2. **Download Node Exporter**
+
+```bash
+cd /tmp
+curl -LO https://github.com/prometheus/node_exporter/releases/download/v1.7.0/node_exporter-1.7.0.linux-amd64.tar.gz
+tar -xzf node_exporter-1.7.0.linux-amd64.tar.gz
+sudo cp node_exporter-1.7.0.linux-amd64/node_exporter /usr/local/bin/
+```
+
+---
+
+#### 3. **Set permissions**
+
+```bash
+sudo chown node_exporter:node_exporter /usr/local/bin/node_exporter
+sudo chmod +x /usr/local/bin/node_exporter
+```
+
+---
+
+#### 4. **Create systemd service**
+
+```bash
+sudo nano /etc/systemd/system/node_exporter.service
+```
+
+Paste the following content:
+
+```ini
+[Unit]
+Description=Node Exporter
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=node_exporter
+Group=node_exporter
+Type=simple
+ExecStart=/usr/local/bin/node_exporter
+
+[Install]
+WantedBy=multi-user.target
+```
+
+---
+
+#### 5. **Reload systemd & start service**
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable node_exporter
+sudo systemctl start node_exporter
+```
+
+---
+
+#### 6. **Check status**
+
+```bash
+sudo systemctl status node_exporter
+```
+
+Expected output:
+
+```
+Active: active (running)
+```
+
+---
+
+#### 7. **Verify metrics endpoint**
+
+Open in browser or curl:
+
+```
+http://<your-server-ip>:9100/metrics
+```
+
+---
 
 
 
