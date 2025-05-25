@@ -944,8 +944,6 @@ Monitor all your infrastructure and pipeline metrics from one place!
 
 ---
 
-Let me know if you want this exported in `.md` file format or want the dashboards auto-loaded using provisioning!
-
 
 
 
