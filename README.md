@@ -823,14 +823,6 @@ Click on **"show more"** next to the **jenkins** job and open the URL provided t
 
 ---
 
-## Summary
-
-You have successfully integrated **Node Exporter** and **Jenkins** monitoring into Prometheus. This setup enables real-time visibility into system and Jenkins CI/CD pipeline metrics.
-
----
-
-If you want, I can also help you format it for Markdown with badges or images. Just let me know!
-
 
 
 
